@@ -1,5 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import isEmpty from "lodash/isEmpty";
+import StocksPortfolioItem from "./aws/dynamo/stocks-portfolio-model";
+import { dynamoClient } from "./aws/dynamo/client-provider";
 
 enum IndustrySectorEnum {
   Tech = "Tech",
@@ -13,10 +15,10 @@ enum IndustrySectorEnum {
 type IndustrySector = keyof typeof IndustrySectorEnum;
 
 interface Stock {
-  id: string
+  tradeId: string
   tiker: string
-  buyPrice: number
-  numShares: number
+  price: number
+  count: number
   sector: IndustrySector
 }
 
@@ -27,22 +29,12 @@ interface CreateTickerRequestBody {
 
 interface DeleteTickerRequestBody {
   userId: string
-  stockId: string
+  tradeId: string
 }
 
 interface GetStocksDataRequestBody {
   userId: string
 }
-
-// interface DefaultResponseBody {
-//   message: string
-// }
-
-// interface StocksDataResponseBody {
-//   stocks: Stock[]
-// }
-
-// type ResponseBody = StocksDataResponseBody | DefaultResponseBody;
 
 type RequestBody = CreateTickerRequestBody | DeleteTickerRequestBody | GetStocksDataRequestBody;
 
@@ -59,22 +51,35 @@ const invalidArgumentsError: string = JSON.stringify({ message: "Invalid Argumen
 async function mainLambdaHandler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   console.log("Recieved event: ", event);
 
-  if (isEmpty(event) || isEmpty(event.body)) {
-    console.error("Event and event body should not be null or empty.");
+  if (isEmpty(event) || isEmpty(event.body) || isEmpty(event.path)) {
+    console.error("Event, event body, event path should not be null or empty.");
 
     return constructErrorResponse(invalidArgumentsError);
   }
 
-  const request: RequestBody = JSON.parse(event.body!);
-  console.log("Retrieved request from API gateway event: ", request);
+  try {
+    const path: string = event.path;
+    const request: RequestBody = JSON.parse(event.body!);
+    console.log("Retrieved request from API gateway event: ", request);
+  
+    if (path === "/stock/create") {
+      await createStockItem(request as CreateTickerRequestBody);
+    } else {
+      console.error("Invalid path value provided: ", path);
 
-  // TODO: use request data
+      return constructErrorResponse(invalidArgumentsError);
+    }
+  
+    console.log("Successfully executed lambda!");
+    return {
+      headers: defaultHeaders,
+      statusCode: 200,
+      body: defaultSuccessResponse
+    }
+  } catch (e) {
+    console.error("Unknown Exception Occurred: ", e);
 
-  console.log("Successfully executed lambda!");
-  return {
-    headers: defaultHeaders,
-    statusCode: 200,
-    body: defaultSuccessResponse
+    return constructErrorResponse();
   }
 }
 
@@ -84,6 +89,39 @@ function constructErrorResponse(error: string = defaultError): APIGatewayProxyRe
     headers: defaultHeaders,
     body: error
   }
+}
+
+async function createStockItem(request: CreateTickerRequestBody) {
+  if (
+    isEmpty(request) ||
+    isEmpty(request.userId) ||
+    isEmpty(request.stock.tradeId) ||
+    isEmpty(request.stock.tiker) ||
+    isEmpty(request.stock.sector) ||
+    request.stock.count <= 0 ||
+    request.stock.price <= 0
+  ) {
+    console.error("Invalid request object given in CreateTickerRequestBody", request);
+    throw new Error("CreateTickerRequestBody is invalid");
+  }
+
+  const item: StocksPortfolioItem = new StocksPortfolioItem()
+  item.userId = request.userId;
+  item.tradeId = request.stock.tradeId;
+  item.ticker = request.stock.tiker;
+  item.price = request.stock.price;
+  item.count = request.stock.count;
+  item.createdAt = getTimeNow();
+  item.sector = request.stock.sector;
+
+  const result = await dynamoClient.put(item);
+  console.log("Result from db put operation is ", result);
+
+  return result;
+}
+
+function getTimeNow(): string {
+  return new Date().toISOString();
 }
 
 export { mainLambdaHandler };

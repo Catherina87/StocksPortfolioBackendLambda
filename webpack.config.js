@@ -1,12 +1,9 @@
 const path = require("path");
 
-const env = process.env.NODE_ENV === "production" ? "production" : "development";
 const entryFile = process.env.FILE_ENTRY || "./src/index.ts";
 
-console.log(`Starting webpack for env=${env} with file entry=${entryFile}`);
-
 module.exports = {
-  mode: env,
+  mode: "production",
   entry: entryFile,
   module: {
     rules: [
