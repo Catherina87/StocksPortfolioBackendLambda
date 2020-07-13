@@ -64,7 +64,10 @@ async function mainLambdaHandler(event: APIGatewayProxyEvent): Promise<APIGatewa
   
     if (path === "/stock/create") {
       await createStockItem(request as CreateTickerRequestBody);
-    } else {
+    } else if (path === "/stock/delete") {
+      await deleteStockItem(request as DeleteTickerRequestBody);
+    } 
+    else {
       console.error("Invalid path value provided: ", path);
 
       return constructErrorResponse(invalidArgumentsError);
@@ -116,6 +119,26 @@ async function createStockItem(request: CreateTickerRequestBody) {
 
   const result = await dynamoClient.put(item);
   console.log("Result from db put operation is ", result);
+
+  return result;
+}
+
+async function deleteStockItem(request: DeleteTickerRequestBody) {
+  if ( 
+    isEmpty(request) ||
+    isEmpty(request.userId) ||
+    isEmpty(request.tradeId) 
+  ) {
+    console.error("Invalid request object given in DeleteTickerRequestBody", request);
+    throw new Error("Request is invalid");
+  }
+
+  const item = new StocksPortfolioItem()
+  item.userId = request.userId;
+  item.tradeId = request.tradeId;
+
+  const result = await dynamoClient.delete(item);
+  console.log("Result from db delete operation is ", result);
 
   return result;
 }
