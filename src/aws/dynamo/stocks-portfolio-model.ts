@@ -23,22 +23,4 @@ export default class StocksPortfolioItem {
 
   @attribute()
   createdAt?: string;
-
-  // public constructor(
-  //   userId?: string,
-  //   tradeId?: string,
-  //   ticker?: string,
-  //   price?: number,
-  //   count?: number,
-  //   sector?: string,
-  //   createdAt?: string
-  // ) {
-  //   this.userId = userId!;
-  //   this.tradeId = tradeId!;
-  //   this.ticker = ticker!;
-  //   this.price = price!;
-  //   this.count = count!;
-  //   this.sector = sector!;
-  //   this.createdAt = createdAt!;
-  // }
 }
