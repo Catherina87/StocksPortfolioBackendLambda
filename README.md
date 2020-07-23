@@ -2,21 +2,21 @@
 
 git / github:
 
-mkdir StocksPortfolio
-in github: new repo StocksPortfolio, create repo
+mkdir StocksPortfolio <br />
+in github: new repo StocksPortfolio, create repo <br />
 
-git init 
-add some files (example gitignore, readme)
-git add, commit
-git remote add origin https://… (see github page for this command when creating new repo) - we connect local git repo with remote github repo
+git init <br />
+add some files (example gitignore, readme)<br />
+git add, commit<br />
+git remote add origin https://… (see github page for this command when creating new repo) - we connect local git repo with remote github repo <br />
 git push -u origin master - we push changes to remote github repo
 
 project folder: 
 
-create src folder
-create package.json (for dependencies and scripts)
-create tsconfig.json (for ts configurations)
-create webpack.config.js
+create src folder<br />
+create package.json (for dependencies and scripts)<br />
+create tsconfig.json (for ts configurations)<br />
+create webpack.config.js<br />
 
 run npm install - it will download al the dependencies we indicated in the package.json file => node modules folder will be created.
 
